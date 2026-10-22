@@ -1,0 +1,31 @@
+
+[
+  {
+    "case_id": "success_https",
+    "task": "Research Python testing",
+    "evidence_urls": ["https://docs.python.org/3/"],
+    "expected_status": "success",
+    "expected_failure_category": null
+  },
+  {
+    "case_id": "missing_evidence",
+    "task": "Research Python testing",
+    "evidence_urls": [],
+    "expected_status": "failed",
+    "expected_failure_category": "input_validation"
+  },
+  {
+    "case_id": "invalid_http_url",
+    "task": "Research Python testing",
+    "evidence_urls": ["http://example.com"],
+    "expected_status": "failed",
+    "expected_failure_category": "input_validation"
+  },
+  {
+    "case_id": "empty_task",
+    "task": "",
+    "evidence_urls": ["https://docs.python.org/3/"],
+    "expected_status": "failed",
+    "expected_failure_category": "input_validation"
+  }
+]
