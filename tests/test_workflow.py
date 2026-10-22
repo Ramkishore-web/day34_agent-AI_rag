@@ -30,3 +30,21 @@ def test_workflow_rejects_invalid_source_url():
             task="Research Python testing",
             evidence_urls=["not-a-valid-url"],
         )
+
+from unittest.mock import patch
+
+import pytest
+
+from src.workflow.main import run_workflow
+
+
+def test_research_failure_is_propagated():
+    with patch(
+        "src.workflow.main.conduct_research",
+        side_effect=RuntimeError("Research failed"),
+    ):
+        with pytest.raises(RuntimeError, match="Research failed"):
+            run_workflow(
+                task="Test research failure",
+                evidence_urls=["https://example.com/evidence"],
+            )
