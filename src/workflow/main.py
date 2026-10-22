@@ -3,6 +3,7 @@ from src.workflow.planner import create_plan
 from src.workflow.researcher import conduct_research
 from src.workflow.validator import validate_result
 from src.workflow.state_machine import WorkflowState, transition
+from src.workflow.trace import WorkflowTrace
 
 
 def run_workflow(
@@ -10,49 +11,51 @@ def run_workflow(
     evidence_urls: list[str],
     run_id: str = "run-001",
 ) -> dict:
-    """Run the workflow with validated state transitions."""
+    """Run the workflow and record execution events."""
 
     state = WorkflowState.START
+    trace = WorkflowTrace(run_id=run_id)
+    trace.record(state, "Workflow started")
 
     try:
-        # Step 1: Start planning
         state = transition(state, WorkflowState.PLANNING)
+        trace.record(state, "Planner created handoff")
+
         handoff = create_plan(run_id, task)
 
-        # Step 2: Start research
         state = transition(state, WorkflowState.RESEARCHING)
+        trace.record(state, "Research started")
 
-        # Supply evidence from an external tool or test fixture.
         handoff = handoff.model_copy(
             update={"evidence_urls": evidence_urls}
         )
-
         result = conduct_research(handoff)
 
-        # Step 3: Validate the research result
         state = transition(state, WorkflowState.VALIDATING)
+        trace.record(state, "Result validation started")
 
         if not validate_result(result):
             raise ValueError("Research result failed validation")
 
-        # Step 4: Mark workflow as completed
         state = transition(state, WorkflowState.COMPLETED)
+        trace.record(state, "Workflow completed")
 
         return {
             "run_id": result.run_id,
             "status": "success",
             "answer": result.answer,
             "evidence_urls": result.evidence_urls,
+            "trace": trace.to_dict(),
         }
 
-    except Exception:
-        # Any workflow error moves the current state to FAILED.
+    except Exception as exc:
         if state not in {
             WorkflowState.COMPLETED,
             WorkflowState.FAILED,
         }:
             state = transition(state, WorkflowState.FAILED)
 
+        trace.record(state, f"Workflow failed: {exc}")
         raise
 
 
