@@ -1,0 +1,49 @@
+{
+  "total_cases": 4,
+  "completion_rate": 0.25,
+  "groundedness_proxy_rate": 1.0,
+  "duplicate_rate": 0.0,
+  "failure_handling_rate": 1.0,
+  "results": [
+    {
+      "case_id": "success_https",
+      "expected_status": "success",
+      "actual_status": "success",
+      "failure_category": null,
+      "answer": "Research completed for task: Research Python testing",
+      "evidence_urls": [
+        "https://docs.python.org/3/"
+      ],
+      "status_matches": true
+    },
+    {
+      "case_id": "missing_evidence",
+      "expected_status": "failed",
+      "actual_status": "failed",
+      "failure_category": "input_or_result_validation",
+      "answer": "",
+      "evidence_urls": [],
+      "status_matches": true
+    },
+    {
+      "case_id": "invalid_http_url",
+      "expected_status": "failed",
+      "actual_status": "failed",
+      "failure_category": "input_or_result_validation",
+      "answer": "",
+      "evidence_urls": [],
+      "status_matches": true
+    },
+    {
+      "case_id": "empty_task",
+      "expected_status": "failed",
+      "actual_status": "failed",
+      "failure_category": "input_or_result_validation",
+      "answer": "",
+      "evidence_urls": [],
+      "status_matches": true
+    }
+  ],
+  "passed_cases": 4,
+  "failed_cases": 0
+}
