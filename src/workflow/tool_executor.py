@@ -20,7 +20,7 @@ class ToolCancelledError(ToolExecutionError):
     """Raised when tool execution is cancelled."""
 
 
-# Successful results are cached for this Python process only.
+# Successful results are cached in memory for this Python process.
 _RESULT_CACHE: dict[str, Any] = {}
 
 
@@ -32,9 +32,16 @@ async def execute_tool(
     timeout_seconds: float = 5.0,
     max_attempts: int = 2,
 ) -> Any:
-    """Execute an async tool with a timeout, bounded retries,
-    output validation, and sequential idempotency caching.
     """
+    Execute an async tool with:
+    - Timeout protection
+    - Bounded retries
+    - Output validation
+    - Successful-result caching
+    - Cancellation propagation
+    """
+
+    # Validate configuration
     if not idempotency_key.strip():
         raise ValueError("idempotency_key cannot be empty")
 
@@ -44,31 +51,40 @@ async def execute_tool(
     if max_attempts < 1:
         raise ValueError("max_attempts must be at least 1")
 
+    # Return a previously successful result for the same key.
     if idempotency_key in _RESULT_CACHE:
         return _RESULT_CACHE[idempotency_key]
 
+    # Execute the tool within the retry budget.
     for attempt in range(1, max_attempts + 1):
         try:
             result = await asyncio.wait_for(
                 tool(),
                 timeout=timeout_seconds,
             )
+
         except asyncio.CancelledError:
-            # Preserve cancellation so the caller can handle it.
+            # Do not retry caller-requested cancellation.
             raise
+
         except TimeoutError as exc:
+            # Keep timeout errors distinct from other tool failures.
             if attempt == max_attempts:
                 raise ToolTimeoutError(
                     f"Tool timed out after {max_attempts} attempts"
                 ) from exc
+
             continue
+
         except Exception as exc:
             if attempt == max_attempts:
                 raise ToolExecutionError(
-                    f"Tool failed after {max_attempts} attempts"
+                    f"Tool failed after {max_attempts} attempts: {exc}"
                 ) from exc
+
             continue
 
+        # Validate the returned data.
         try:
             is_valid = validate_output(result)
         except Exception as exc:
