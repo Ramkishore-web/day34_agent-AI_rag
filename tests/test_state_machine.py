@@ -33,3 +33,19 @@ def test_invalid_transition_rejected():
 def test_terminal_state_cannot_continue():
     with pytest.raises(ValueError, match="Invalid transition"):
         transition(WorkflowState.COMPLETED, WorkflowState.PLANNING)
+
+def test_workflow_can_be_cancelled():
+    state = transition(
+        WorkflowState.RESEARCHING,
+        WorkflowState.CANCELLED,
+    )
+
+    assert state == WorkflowState.CANCELLED
+
+
+def test_cancelled_state_cannot_continue():
+    with pytest.raises(ValueError):
+        transition(
+            WorkflowState.CANCELLED,
+            WorkflowState.COMPLETED,
+        )
